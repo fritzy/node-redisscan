@@ -26,7 +26,7 @@ var redisScan = require('redisscan');
 var redis     = require('redis').createClient();
 
 
-scanRedis({
+redisScan({
     redis: redis,
     each_callback: function (type, key, subkey, value, cb) {
         console.log(type, key, subkey, value);
