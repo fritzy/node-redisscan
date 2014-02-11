@@ -1,0 +1,19 @@
+{
+  "name": "redisscan",
+  "version": "1.0.0",
+  "homepage": "https://github.com/fritzy/node-redisscan",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fritzy/node-redisscan.git"
+  },
+  "description": "Scan through all redis keys and containers, calling back each value individually.",
+  "dependencies": {
+    "redis": "~0.10.0",
+    "async": "~0.2.10"
+  },
+  "devDependencies": {
+    "precommit-hook": "*"
+  },
+  "scripts": {},
+  "main": "index.js"
+}
