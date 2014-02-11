@@ -39,4 +39,7 @@ redisScan({
 });
 ```
 
+## Install
+`npm install redisscan`
+
 License MIT (c) 2014 Nathanael C. Fritz
