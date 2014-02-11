@@ -38,6 +38,10 @@ redisScan({
     }
 });
 ```
+## Note/Warning
+
+If values are changing, there is no guarantee on value integrity. This is not atomic.
+I recommend using a lock pattern with this function.
 
 ## Install
 `npm install redisscan`
