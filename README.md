@@ -4,7 +4,7 @@ Recursively scans the keyspace of a Redis 2.8+ instance using SCAN, HSCAN, ZSCAN
 
 Fairly safe in a production environment as it does **NOT** use KEYS * to iterate.
 
-Optionsally pass a redis pattern to filter from.
+Optiosally pass a redis pattern to filter from.
 
 `scanRedis(args)`
 
@@ -39,4 +39,4 @@ redisScan({
 });
 ```
 
-License MIT
+License MIT (c) 2014 Nathanael C. Fritz
