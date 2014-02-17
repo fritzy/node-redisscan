@@ -14,6 +14,7 @@ function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
                 args = [key].concat(args);
             }
             redis.send_command(cmd, args, function (err, result) {
+                var idx = 0;
                 var keys;
                 if (err) {
                     acb(err);
@@ -34,7 +35,7 @@ function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
                                                 if (err) {
                                                     ecb(err);
                                                 } else {
-                                                    each_callback('string', subkey, null, value, ecb);
+                                                    each_callback('string', subkey, null, null, value, ecb);
                                                 }
                                             });
                                         } else if (sresult === 'hash') {
@@ -54,7 +55,7 @@ function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
                                                     async.doWhilst(
                                                         function (wcb) {
                                                             redis.lindex(subkey, idx, function (err, value) {
-                                                                each_callback('list', subkey, idx, value, wcb);
+                                                                each_callback('list', subkey, idx, length, value, wcb);
                                                             });
                                                         },
                                                         function () { idx++; return idx < length; },
@@ -68,8 +69,9 @@ function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
                                     }
                                 });
                             } else if (cmd === 'SSCAN') {
-                                each_callback('set', key, null, subkey, ecb);
+                                each_callback('set', key, idx, null, subkey, ecb);
                             }
+                            idx++;
                         },
                         function (err) {
                             //done with this scan iterator; on to the next
@@ -82,9 +84,9 @@ function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
                                 var subkey = result[1][idx];
                                 var value = result[1][idx+1];
                                 if (cmd === 'HSCAN') {
-                                    each_callback('hash', key, subkey, value, ecb);
+                                    each_callback('hash', key, subkey, null, value, ecb);
                                 } else if (cmd === 'ZSCAN') {
-                                    each_callback('zset', key, value, subkey, ecb);
+                                    each_callback('zset', key, value, null, subkey, ecb);
                                 }
                             }, 
                             function () {idx += 2; return idx < result[1].length;},
