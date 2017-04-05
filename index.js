@@ -1,21 +1,6 @@
 var async = require('async');
-var redis, pattern, keys_only, each_callback;
 
-module.exports = function (args) {
-    redis            = args.redis;
-    pattern          = args.pattern || pattern;
-    keys_only        = args.keys_only;
-    each_callback    = args.each_callback;
-
-    genericScan(args.cmd, args.key, args.done_callback);
-};
-
-var genericScan = function(cmd, key, callback) {
-
-    cmd      = cmd || 'SCAN';
-    key      = key || null;
-    callback = callback || function(){};
-
+function genericScan(redis, cmd, key, pattern, each_callback, done_callback) {
     var iter = '0';
     async.doWhilst(
         function (acb) {
@@ -29,7 +14,6 @@ var genericScan = function(cmd, key, callback) {
                 args = [key].concat(args);
             }
             redis.send_command(cmd, args, function (err, result) {
-
                 var idx = 0;
                 var keys;
                 if (err) {
@@ -39,37 +23,34 @@ var genericScan = function(cmd, key, callback) {
                     iter = result[0];
                     //each key, limit to 5 pending callbacks at a time
                     if (['SCAN', 'SSCAN'].indexOf(cmd) !== -1) {
-
-                        async.eachSeries(result[1], function (subkey, next) {
-                            if (keys_only){
-                                each_callback(null, subkey, null, null, null, next);
-                            } else if (cmd === 'SCAN') {
+                        async.eachSeries(result[1], function (subkey, ecb) {
+                            if (cmd === 'SCAN') {
                                 redis.type(subkey, function (err, sresult) {
                                     var value;
                                     if (err) {
-                                        next(err);
+                                        ecb(err);
                                     } else {
                                         if (sresult === 'string') {
                                             redis.get(subkey, function (err, value) {
                                                 if (err) {
-                                                    next(err);
+                                                    ecb(err);
                                                 } else {
-                                                    each_callback('string', subkey, null, null, value, next);
+                                                    each_callback('string', subkey, null, null, value, ecb);
                                                 }
                                             });
                                         } else if (sresult === 'hash') {
-                                            genericScan('HSCAN', subkey, next);
+                                            genericScan(redis, 'HSCAN', subkey, null, each_callback, ecb);
                                         } else if (sresult === 'set') {
-                                            genericScan('SSCAN', subkey, next);
+                                            genericScan(redis, 'SSCAN', subkey, null, each_callback, ecb);
                                         } else if (sresult === 'zset') {
-                                            genericScan('ZSCAN', subkey, next);
+                                            genericScan(redis, 'ZSCAN', subkey, null, each_callback, ecb);
                                         } else if (sresult === 'list') {
-                                            //each_callback('list', subkey, null, null, next);
+                                            //each_callback('list', subkey, null, null, ecb);
                                             redis.llen(subkey, function (err, length) {
                                                 var idx = 0;
                                                 length = parseInt(length);
                                                 if (err) {
-                                                    next(err);
+                                                    ecb(err);
                                                 } else {
                                                     async.doWhilst(
                                                         function (wcb) {
@@ -79,7 +60,7 @@ var genericScan = function(cmd, key, callback) {
                                                         },
                                                         function () { idx++; return idx < length; },
                                                         function (err) {
-                                                            next(err);
+                                                            ecb(err)
                                                         }
                                                     );
                                                 }
@@ -88,7 +69,7 @@ var genericScan = function(cmd, key, callback) {
                                     }
                                 });
                             } else if (cmd === 'SSCAN') {
-                                each_callback('set', key, idx, null, subkey, next);
+                                each_callback('set', key, idx, null, subkey, ecb);
                             }
                             idx++;
                         },
@@ -97,18 +78,18 @@ var genericScan = function(cmd, key, callback) {
                             acb(err);
                         });
                     } else {
-                        var idx2 = 0;
+                        var idx = 0;
                         async.doWhilst(
                             function (ecb) {
-                                var subkey = result[1][idx2];
-                                var value = result[1][idx2+1];
+                                var subkey = result[1][idx];
+                                var value = result[1][idx+1];
                                 if (cmd === 'HSCAN') {
                                     each_callback('hash', key, subkey, null, value, ecb);
                                 } else if (cmd === 'ZSCAN') {
                                     each_callback('zset', key, value, null, subkey, ecb);
                                 }
-                            },
-                            function () {idx2 += 2; return idx2 < result[1].length;},
+                            }, 
+                            function () {idx += 2; return idx < result[1].length;},
                             function (err) {
                                 acb(err);
                             }
@@ -121,11 +102,12 @@ var genericScan = function(cmd, key, callback) {
         function () { return iter != '0'; },
         //done
         function (err) {
-            callback(err);
-            // done_callback(err);
+            done_callback(err);
         }
     );
+}
+
+module.exports = function (args) {
+    genericScan(args.redis, args.cmd || 'SCAN', args.key || null, args.pattern, args.each_callback, args.done_callback);
 };
-
-
 
