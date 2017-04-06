@@ -37,13 +37,13 @@ redisScan({
 * `pattern`: **optional** wildcard key pattern to match, e.g: `some:key:pattern:*` [docs](https://redis.io/commands/scan#the-match-option)
 * `keys_only`: **optional** boolean -- returns nothing but keys, no types,lengths,values etc. (defaults to `false`)
 * `count_amt`: **optional** positive/non-zero integer -- redis hint for work done per SCAN operation (defaults to 10) [docs](https://redis.io/commands/scan#the-count-option)
-* `each_callback`: **required** `function (type, key, subkey, length, value, finish_callback)`  This is called for every string, and every subkey/value in a container when not using `keys_only`, so outer keys may show up multiple times.
+* `each_callback`: **required** `function (type, key, subkey, length, value, next)`  This is called for every string, and every subkey/value in a container when not using `keys_only`, so outer keys may show up multiple times.
     * `type` may be `"string"`, `"hash"`, `"set"`, `"zset"`, `"list"`
     * `key` is the redis key
     * `subkey` may be `null` or populated with a hash key
     * `length` is the length of a set or list
     * `value` is the value of the key or subkey when appropriate
-    * `finish_callback` should be called as a function with no arguments if successful or an `Error` object if not.
+    * `next()` should be called as a function with no arguments if successful or an `Error` object if not.
 * `done_callback`: **optional** function called when scanning completes with one argument, and `Error` object if an error ws raised
 
 ## Note/Warning
