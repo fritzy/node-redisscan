@@ -1,4 +1,4 @@
-#RedisScan
+# RedisScan
 
 Recursively scans the keyspace of a Redis 2.8+ instance using SCAN, HSCAN, ZSCAN, & SSCAN as well as Lists.
 
@@ -8,16 +8,17 @@ Optionally pass a redis pattern to filter from.
 
 `scanRedis(args)`
 
-args:
+### args (simple object):
 
-* redis: node-redis instance (required)
-* pattern: optional wildcard key pattern
-* each\_callback: function (type, key, subkey, value, finish\_callback)
+* `redis`: `node-redis` instance (required)
+* `pattern`: optional wildcard key pattern to match, e.g: `some:key:pattern:*` [redis MATCH docs](https://redis.io/commands/scan#the-match-option)
+* `keys_only`: optional boolean -- returns nothing but keys, no types,lengths,values etc. (defaults to `false`)
+* `each_callback`: function (type, key, subkey, length, value, finish\_callback)
     type may be string, hash, set, zset, list
     call finish\_callback when done
-* done\_callback: called when done scanning
+* `done_callback`: called when done scanning
 
-each\_callback is called for every string, and every subkey/value in a container, so container keys may be called multiple times.
+`each_callback` is called for every string, and every subkey/value in a container when not using `keys_only`, so container keys may be called multiple times.
 
 Example: 
 
@@ -28,8 +29,9 @@ var redis     = require('redis').createClient();
 
 redisScan({
     redis: redis,
-    each_callback: function (type, key, subkey, value, cb) {
-        console.log(type, key, subkey, value);
+    keys_only: false,
+    each_callback: function (type, key, subkey, length, value, cb) {
+        console.log(type, key, subkey, length, value);
         cb();
     },
     done_callback: function (err) {
