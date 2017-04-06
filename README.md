@@ -6,21 +6,10 @@ Fairly safe in a production environment as it does **NOT** use KEYS * to iterate
 
 Optionally pass a redis pattern to filter from.
 
-`scanRedis(args)`
+## Install
+`npm install redisscan`
 
-### args (simple object):
-
-* `redis`: `node-redis` instance (required)
-* `pattern`: optional wildcard key pattern to match, e.g: `some:key:pattern:*` [redis MATCH docs](https://redis.io/commands/scan#the-match-option)
-* `keys_only`: optional boolean -- returns nothing but keys, no types,lengths,values etc. (defaults to `false`)
-* `each_callback`: function (type, key, subkey, length, value, finish\_callback)
-    type may be string, hash, set, zset, list
-    call finish\_callback when done
-* `done_callback`: called when done scanning
-
-`each_callback` is called for every string, and every subkey/value in a container when not using `keys_only`, so container keys may be called multiple times.
-
-Example: 
+## Example 
 
 ```javascript
 var redisScan = require('redisscan');
@@ -29,6 +18,7 @@ var redis     = require('redis').createClient();
 
 redisScan({
     redis: redis,
+    pattern: 'awesome:key:prefix:*',
     keys_only: false,
     each_callback: function (type, key, subkey, length, value, cb) {
         console.log(type, key, subkey, length, value);
@@ -40,12 +30,27 @@ redisScan({
     }
 });
 ```
+
+### redisScan(parameters):
+
+* `redis`: **required** `node-redis` client instance 
+* `pattern`: **optional** wildcard key pattern to match, e.g: `some:key:pattern:*` [docs](https://redis.io/commands/scan#the-match-option)
+* `keys_only`: **optional** boolean -- returns nothing but keys, no types,lengths,values etc. (defaults to `false`)
+* `count_amt`: **optional** positive/non-zero integer -- redis hint for work done per SCAN operation (defaults to 10) [docs](https://redis.io/commands/scan#the-count-option)
+* `each_callback`: **required** `function (type, key, subkey, length, value, finish_callback)`  This is called for every string, and every subkey/value in a container when not using `keys_only`, so outer keys may show up multiple times.
+    * `type` may be `"string"`, `"hash"`, `"set"`, `"zset"`, `"list"`
+    * `key` is the redis key
+    * `subkey` may be `null` or populated with a hash key
+    * `length` is the length of a set or list
+    * `value` is the value of the key or subkey when appropriate
+    * `finish_callback` should be called as a function with no arguments if successful or an `Error` object if not.
+* `done_callback`: **optional** function called when scanning completes with one argument, and `Error` object if an error ws raised
+
 ## Note/Warning
 
 If values are changing, there is no guarantee on value integrity. This is not atomic.
 I recommend using a lock pattern with this function.
 
-## Install
-`npm install redisscan`
+
 
 License MIT (c) 2014 Nathanael C. Fritz
