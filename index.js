@@ -1,10 +1,11 @@
 var async = require('async');
-var redis, pattern, keys_only, each_callback;
+var redis, pattern, keys_only, count_amt, each_callback;
 
 module.exports = function (args) {
     redis            = args.redis;
     pattern          = args.pattern || pattern;
     keys_only        = args.keys_only;
+    count_amt        = args.count_amt;
     each_callback    = args.each_callback;
 
     genericScan(args.cmd, args.key, args.done_callback);
@@ -24,6 +25,9 @@ var genericScan = function(cmd, key, callback) {
             if (cmd === 'SCAN') {
                 if (pattern) {
                     args = args.concat(['MATCH', pattern]);
+                }
+                if (count_amt){
+                    args = args.concat(['COUNT', count_amt]);
                 }
             } else {
                 args = [key].concat(args);
