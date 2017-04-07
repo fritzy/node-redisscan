@@ -8,12 +8,20 @@
   },
   "description": "Scan through all redis keys and containers, calling back each value individually.",
   "dependencies": {
-    "redis": "~0.10.0",
+    "redis": "^2.7.1",
     "async": "~0.2.10"
   },
   "devDependencies": {
     "precommit-hook": "*"
   },
-  "scripts": {},
-  "main": "index.js"
+  "scripts": {
+    "lint": "jshint .",
+    "validate": "npm ls"
+  },
+  "main": "index.js",
+  "pre-commit": [
+    "lint",
+    "validate",
+    "test"
+  ]
 }
